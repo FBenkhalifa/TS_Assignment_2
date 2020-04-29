@@ -24,13 +24,29 @@ ggplot(data, aes(x = date, y = InternetRetail)) +
   geom_line() +
   theme_hc()
 
+#' Comment: From the plot we can observe that the sales are trending upwards.
+#' Additionally, we observe sales to be highly seasonal, with a sharp spike
+#' in the last quarter.
+
 # 2.b) --------------------------------------------------------------------
 
 # Create seasonal plot
 ggseasonplot(ts_data) + theme_hc()
 
+#' Comment: With this plot the time axis is fixed to one year and different
+#' years are represented by different lines. We can thus better compare sales
+#' across years and more clearly see how sales spike in november and december, 
+#' due to christmas business.
+
+
 # Create acf plot
 acf(ts_data, lag.max = 36)
+
+#' Comment: The acf shows how much the sales of one month correlate with the 
+#' nth lag of monthly sales, up to 36 months. We can see that the correlation
+#' is especially high between the holiday sale seasons, which are 12 months 
+#' apart. The acf is significant up to a lag of 24, resembling a 2 year time 
+#' period.
 
 
 # 2.c) --------------------------------------------------------------------
@@ -44,6 +60,9 @@ ggplot(data, aes(x = date)) +
   geom_line(aes(y = InternetRetail)) +
   geom_line(aes(y = simple_ma), color = "red") +
   theme_hc()
+
+#' Comment: The MA process is of order 12, and thus averages over one year.
+#' We can clearly see the smooth upwards trend of sales. 
 
 
 # 2.d) --------------------------------------------------------------------
@@ -63,7 +82,7 @@ ggplot(data, aes(x = date)) +
 # see an increase in the fluctuation with increasing trend. 
 
 
-# 2.e) --------------------------------------------------------------------
+# 2.e) --------------------------------------------------------------------XX 
 data <- data %>% mutate(detrend = InternetRetail/simple_ma)
 ggplot(data, aes(x = date)) + 
   geom_line(aes(y = detrend)) +
@@ -78,14 +97,22 @@ data %>% group_by(Month) %>% summarize(Mean = mean(detrend))
 
 
 
-# 2.f) --------------------------------------------------------------------
+# 2.f) --------------------------------------------------------------------XX
 
 dec_data <- decompose(ts_data, type = "multiplicative")
+plot(dec_data)
+
+#' Comment: The process is decomposed into the trend, seasonal and random component.
+#' The trend is smooth and continuously rising. The random seems to be 
+#' a stationary process with constant mean and variance. The seasonal component..(stationary?)
 
 
 # 2.g) --------------------------------------------------------------------
+
 dec_data$random %>% acf(na.action = na.pass)
 
+#' Comment: The residual component of the decomposition, seem to be white noise
+#' as the spikes of the acf are only rarely significant.
 
 # 2.h) --------------------------------------------------------------------
 
@@ -93,9 +120,22 @@ arima <- dec_data$random %>% auto.arima
 summary(arima)
 dec_data$random %>% plot
 
+#' Check model diagnostics: The model has low error measures suggesting a 
+#' good fit to the data.
+
+
 ljung_test <- map_df(c(1:24), ~Box.test(dec_data$random, lag = ., type = "Box-Pierce") %>% tidy)
 ljung_test %>% print(n = 50)
+
+
 # 2.i) --------------------------------------------------------------------
 
 preds <- forecast(arima, h = 24)
 preds
+
+
+#' Comment: The forecast follows our expectations as it continues the seasonal
+#' pattern closely.
+
+
+
