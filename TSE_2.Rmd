@@ -1,0 +1,104 @@
+---
+title: "TSE Assignment 2"
+author: "Maximilian J. Arrich"
+date: "29 4 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(magrittr)
+library(tidyverse)
+library(pander)
+
+```
+
+
+## 1. ETF Data Analysis
+(a) Use the R “quantmod” library to draw the backward-adjusted closing prices of the ETFs with ticker symbols EWA and EWC from 2012-02-02 to 2020-02-02. These two ETFs represent two equity baskets, the MSCI Australia and the MSCI Canada. Plot the two time series in one plot and comment.
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+library(quantmod)
+
+# Load the data from quantmod
+getSymbols("EWA",src="yahoo")
+getSymbols("EWC",src="yahoo")
+
+# clean up
+ewa <- EWA %>% .[,6] %>% window(start = "2012-02-02", end = "2020-02-02") %>% 
+  set_colnames("EWA") %>% as_tibble(rownames = "time")
+ewc <- EWC %>% .[,6] %>% window(start = "2012-02-02", end = "2020-02-02")  %>% 
+  set_colnames("EWC")%>% as_tibble(rownames = "time")
+data <- full_join(ewa, ewc, by = "time") %>% mutate(time = as.Date(time))
+
+# reshape and plot
+data %>% pivot_longer(-time, "Series") %>% 
+  ggplot(aes(x = time, y = value, color = Series)) + geom_line() + 
+  ylab("Adj. Closing Price") + xlab("Time")
+
+```
+
+The two series seem to be heavily positively correlated.Furthermore, both series show a positive trend which leads to the impression of both series not being stationary. However the two series appear to be co-stationary.
+
+
+(b) Calculate the spread of the two times series, plot it and calculate ACF and PACF. Comment. Name two ARIMA(p,d,q) models that could suit the data according to the plots.
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+data <- data %>% mutate(spread = EWA - EWC) 
+data %>% ggplot(aes(x = time, y = spread)) + geom_line(color = "blue", alpha = 0.6) +
+  ylab("Adj. Closing Price") + xlab("Time") + ggtitle("Spread")
+
+```
+COntrary to the two series individually, the spread seems to be stationary. This is a furhter hint to costationarity of the two series.
+
+
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+acf(data$spread)
+```
+
+The spread shows strong autocorrelation. 
+
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+pacf(data$spread)
+```
+
+The spread shows some significant partial autocorrelation. This hints to the existance of 
+
+
+
+(c) Conduct an Augmented Dickey Fuller test on all three time series using the R library “urca”. Explain which set-up you choose in the testing procedure (lag length and regression setting) using economic and econometric arguments. Comment on the results.
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+library(urca)
+library(broom)
+
+
+adf_res <- data %>% select(-time) %>% 
+  imap(~ur.df(.x, lag = 5, type = "none", selectlags = "AIC")@testreg %>% tidy() %>% filter(!grepl("diff", term)) %>% mutate(series = .y)) %>%
+  do.call(what = bind_rows) %>% select(series, statistic, p.value)
+
+pander(adf_res)
+
+```
+
+We can not reject a unit root for any of the series.
+
+
+
+(d) What kind of econometric relationship do the EWA and EWC series adhere to? Explain in a few words the Johansen test. Conduct a Johansen test (command “ca.jo” in the “urca” library) and comment on your results.
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+library(urca)
+library(broom)
+
+ca.jo(data %>% select(EWA, EWC))
+
+
+
+```
+
+
+
+
+
