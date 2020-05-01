@@ -49,7 +49,7 @@ data %>% ggplot(aes(x = time, y = spread)) + geom_line(color = "blue", alpha = 0
   ylab("Adj. Closing Price") + xlab("Time") + ggtitle("Spread")
 
 ```
-COntrary to the two series individually, the spread seems to be stationary. This is a furhter hint to costationarity of the two series.
+Contrary to the two series individually, the spread seems to be stationary. This is a furhter hint to costationarity of the two series.
 
 
 
@@ -57,14 +57,16 @@ COntrary to the two series individually, the spread seems to be stationary. This
 acf(data$spread)
 ```
 
-The spread shows strong autocorrelation. 
+The spread shows strong autocorrelation, which is decaying slightly for further lags. 
 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 pacf(data$spread)
 ```
 
-The spread shows some significant partial autocorrelation. This hints to the existance of 
+The spread very significant partial autocorrelation on the first lag, and is insignificant for all further lags. 
+
+Models that could suit the data would thus be ARIMA(1,0,0) or a random walk in the form of ARIMA(0,1,0)
 
 
 
@@ -94,9 +96,15 @@ library(broom)
 
 ca.jo(data %>% select(EWA, EWC))
 
-
-
 ```
+
+Econometric Relationship: Both time series have an order of integration of one, or I(1), meaning that the minimum number of differences that are required to obtain a covariance-stationary series are equal to 1.
+
+
+The Johansen test allows to test of multiple I(1) time series.
+
+
+
 
 ## 2. Seasonalities and Forecasting
 
