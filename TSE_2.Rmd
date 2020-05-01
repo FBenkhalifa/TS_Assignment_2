@@ -48,7 +48,7 @@ data %>% pivot_longer(-time, "Series") %>%
 
 ```
 
-The two series seem to be heavily positively correlated.Furthermore, both series show a positive trend which leads to the impression of both series not being stationary. However the two series appear to be co-stationary.
+The two series seem to be heavily positively correlated. Furthermore, both series show a positive trend which leads to the impression of both series not being stationary. However the two series appear to be co-stationary.
 
 
 (b) Calculate the spread of the two times series, plot it and calculate ACF and PACF. Comment. Name two ARIMA(p,d,q) models that could suit the data according to the plots.
@@ -59,6 +59,7 @@ data %>% ggplot(aes(x = time, y = spread)) + geom_line(color = "blue", alpha = 0
   ylab("Adj. Closing Price") + xlab("Time") + ggtitle("Spread")
 
 ```
+
 Contrary to the two series individually, the spread seems to be stationary. This is a furhter hint to costationarity of the two series.
 
 
@@ -73,7 +74,7 @@ The spread shows strong autocorrelation, which is decaying slightly for further 
 pacf(data$spread)
 ```
 
-The spread very significant partial autocorrelation on the first lag, and is insignificant for all further lags. 
+The spread admits very significant partial autocorrelation on the first lag, and is insignificant for all further lags. 
 
 Models that could suit the data would thus be ARIMA(1,0,0) or a random walk in the form of ARIMA(0,1,0)
 
@@ -96,8 +97,6 @@ pander(adf_res)
 
 We can not reject a unit root for any of the series.
 
-
-
 (d) What kind of econometric relationship do the EWA and EWC series adhere to? Explain in a few words the Johansen test. Conduct a Johansen test (command “ca.jo” in the “urca” library) and comment on your results.
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 library(urca)
@@ -110,7 +109,7 @@ ca.jo(data %>% select(EWA, EWC))
 Econometric Relationship: Both time series have an order of integration of one, or I(1), meaning that the minimum number of differences that are required to obtain a covariance-stationary series are equal to 1.
 As the two series move in a similar way, we might suspect that there is a linear combination of these series with integrated of order less than 1, or I, which would mean that the two series are co-integrated.
 
-The Johansen test allows to test if cointegration is present in a set of k time series. There are two approaches to the Johansen’s test. The trace and the the maximum eigenvalue approach. Compared to Engle-Granger 2-step approach to estimating cointegration relations, the Johansen test is more powerful as it allows to test for than one cointegration relationship.
+The Johansen test allows to test if cointegration is present in a set of k time series. There are two approaches to the Johansen’s test. The trace and the the maximum eigenvalue approach. Compared to Engle-Granger 2-step approach to estimating cointegration relations, the Johansen test is more powerful as it allows to test for more than one cointegration relationship.
 
 Trace: The null hypothesis is that the number of cointegration vectors is r = r* < k, and the alternative hypothesis that r = k. Where testing is done sequentially for r* = 1,2,3,.. and the first value of r that is not rejected is taken as the estimate of r.
 
