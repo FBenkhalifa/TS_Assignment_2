@@ -52,8 +52,7 @@ acf(ts_data, lag.max = 36)
 # 2.c) --------------------------------------------------------------------
 
 # Add simple moving average with window starting for t-6
-data$simple_ma <- ts_data %>% slide_dbl(mean, .before = 6, .after = 6)
-data$ma <- ma(ts_data, order = 12, centre = TRUE)
+data$ma <- ma(ts_data, order = 12)
 
 # Plot the data accordingly
 ggplot(data, aes(x = date)) + 
@@ -83,9 +82,9 @@ ggplot(data, aes(x = date)) +
 
 
 # 2.e) --------------------------------------------------------------------XX 
-data <- data %>% mutate(detrend = InternetRetail/simple_ma)
+data <- data %>% mutate(m_t = InternetRetail/ma) %>% na.omit
 ggplot(data, aes(x = date)) + 
-  geom_line(aes(y = detrend)) +
+  geom_line(aes(y = m_t)) +
   theme_hc()
 
 # No the data is not weakly stationary since the graph is obviously a 
@@ -93,10 +92,24 @@ ggplot(data, aes(x = date)) +
 # time series are a function of time.
 
 # Decompose
-data %>% group_by(Month) %>% summarize(Mean = mean(detrend))
+seasonal_component <- data %>% 
+  group_by(Month) %>% 
+  summarize(s_t = mean(m_t)) %>% 
+  mutate(Month = month(mdy(Month, truncated = 2), label = T, locale = "eng")) %>% 
+  arrange(Month)
 
 
+# Plot seasonal component
+ts(rep(seasonal_component$Mean, 12),  frequency = 12, start = c(2011, 1)) %>% 
+  plot()
 
+# Plot residual
+data <- data %>% right_join(., seasonal_component, by = "Month") %>% 
+  mutate(u_t = InternetRetail / (ma * s_t))
+
+data %>% ggplot(aes(x=date, y = u_t)) + 
+  geom_line() + 
+  theme_hc()
 # 2.f) --------------------------------------------------------------------XX
 
 dec_data <- decompose(ts_data, type = "multiplicative")
