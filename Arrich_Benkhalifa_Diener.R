@@ -6,22 +6,22 @@ library(slider)
 library(ggthemes)
 library(broom)
 library(sweep)
-
+library(pander)
 
 
 # 2.a) --------------------------------------------------------------------
 
 # Read data and convert date column to comfortable format
-data <- read_csv2("./data/InternetRetailSales.csv") %>% 
+data_raw <- read_csv2("./data/InternetRetailSales.csv") %>% 
   unite(col = "date", Year:Month, sep = " ", remove = FALSE) %>% 
   mutate_at("date", ~ymd(., truncated = 1))
 
 # Convert data to time series object
-ts_data <- ts(data$InternetRetail, frequency = 12, start = c(2011, 7))
+ts_data <- ts(data_raw$InternetRetail, frequency = 12, start = c(2011, 7))
 
 # Plot the data
 plot(ts_data)
-ggplot(data, aes(x = date, y = InternetRetail)) + 
+ggplot(data_raw, aes(x = date, y = InternetRetail)) + 
   geom_line() +
   theme_hc()
 
@@ -53,12 +53,12 @@ acf(ts_data, lag.max = 36)
 # 2.c) --------------------------------------------------------------------
 
 # Add simple moving average with window starting for t-6
-data$ma <- ma(ts_data, order = 12)
+data <- data_raw %>% mutate(ma = ma(ts_data, order = 12))
 
 # Plot the data accordingly
 ggplot(data, aes(x = date)) + 
   geom_line(aes(y = InternetRetail)) +
-  geom_line(aes(y = simple_ma), color = "red") +
+  geom_line(aes(y = ma), color = "red") +
   theme_hc()
 
 #' Comment: The MA process is of order 12, and thus averages over one year.
@@ -130,9 +130,12 @@ dec_data$random %>% acf(na.action = na.pass)
 
 # 2.h) --------------------------------------------------------------------
 
-arima <- ts_data %>% auto.arima
-summary(arima)
-dec_data$random %>% plot
+arima <- auto.arima(ts_data)
+arima_ord <- auto.arima(data$InternetRetail)
+arima %>% summary
+arima %>% sw_tidy
+arima %>% sw_glance
+map_dfr(list(arima, arima_ord), sw_glance) %>% pander
 
 #' Check model diagnostics: The model has low error measures suggesting a 
 #' good fit to the data.
@@ -145,11 +148,6 @@ ljung_test %>% print(n = 50)
 # 2.i) --------------------------------------------------------------------
 
 preds <- forecast(arima, h = 24) %>% sweep::sw_sweep(timekit_idx = TRUE, rename_index = "date")
-preds %>% print(n = 100)
-
-ggplot(data) +
-  geom_line(aes(x = date, y = InternetRetail))+
-  geom_line()
 
 preds %>%
   ggplot(aes(x = date, y = value, color = key)) +
