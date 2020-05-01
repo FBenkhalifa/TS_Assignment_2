@@ -101,7 +101,7 @@ seasonal_component <- data %>%
 
 
 # Plot seasonal component
-ts(rep(seasonal_component$Mean, 12),  frequency = 12, start = c(2011, 1)) %>% 
+ts(rep(seasonal_component$s_t, 12),  frequency = 12, start = c(2012, 1)) %>% 
   plot()
 
 # Plot residual

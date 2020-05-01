@@ -237,11 +237,10 @@ ggplot(data, aes(x = date)) +
 
 
 ```
-No, the detrended data is not weakly stationary since the graph is obviously a 
-function of time and seasonal patterns pertain. Both mean and variance of the
-time series are a function of time. 
+No, the detrended data is not weakly stationary since the variance seems to be a 
+function of time and seasonal patterns pertain. Variance seems to decreaes over time.
 
-
+The average seasonality can then be captured by averaging over each month in every year.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 
@@ -251,6 +250,16 @@ seasonal_component <- data %>%
   mutate(Month = month(mdy(Month, truncated = 2), label = T, locale = "eng")) %>% 
   arrange(Month)
 
+# Plot seasonal component
+ts(rep(seasonal_component$s_t, 12),  frequency = 12, start = c(2012, 1)) %>% 
+  plot()
+
+
+```
+
+From that the residual component can be extracted:
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
 
 # Plot residual
 data <- data %>% right_join(., seasonal_component, by = "Month") %>% 
@@ -262,7 +271,6 @@ data %>% ggplot(aes(x=date, y = u_t)) +
   theme_hc()
 
 ```
-The seasonal component can also be considered as stationary process, since it 
 Clearly, the error term is white noise, hence the process can be seen as weakly stationary.
 
 (f) Decompose the time series using the "decompose" command and comment.
@@ -275,8 +283,8 @@ plot(dec_data)
 ```
 
 The process is again decomposed into the trend, seasonal and random component.
-The trend is smooth and continuously rising. The random seems to be 
-a stationary process with constant mean and variance. The seasonal component..(stationary?)
+The trend is smooth and continuously rising. The random component seems to be 
+a stationary process with constant mean and variance (white noise). The seasonal component also seems to be stationary since it fluctuates around the trend component.
 
 (g) Investigate the ACF of the residual component of the decomposition. Are they
 white noise?
