@@ -12,18 +12,12 @@ library(urca)
 library(broom)
 library(urca)
 library(broom)
+library(magrittr)
 
----
-  title: "TSE Assignment 2"
-author: "Maximilian J. Arrich"
-date: "29 4 2020"
-output: pdf_document
----
 
 
 # 1.a) --------------------------------------------------------------------
 
-setwd(here::here())
 # Load the data from quantmod
 getSymbols("EWA",src="yahoo")
 getSymbols("EWC",src="yahoo")
@@ -63,6 +57,7 @@ pander(adf_res)
 # 1.d) --------------------------------------------------------------------
 
 ca.jo(data %>% select(EWA, EWC))
+
 
 
 # 2.a) --------------------------------------------------------------------
