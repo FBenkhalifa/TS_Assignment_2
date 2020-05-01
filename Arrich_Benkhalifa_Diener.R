@@ -12,16 +12,16 @@ library(sweep)
 # 2.a) --------------------------------------------------------------------
 
 # Read data and convert date column to comfortable format
-data <- read_csv2("./data/InternetRetailSales.csv") %>% 
+data_raw <- read_csv2("./data/InternetRetailSales.csv") %>% 
   unite(col = "date", Year:Month, sep = " ", remove = FALSE) %>% 
   mutate_at("date", ~ymd(., truncated = 1))
 
 # Convert data to time series object
-ts_data <- ts(data$InternetRetail, frequency = 12, start = c(2011, 7))
+ts_data <- ts(data_raw$InternetRetail, frequency = 12, start = c(2011, 7))
 
 # Plot the data
 plot(ts_data)
-ggplot(data, aes(x = date, y = InternetRetail)) + 
+ggplot(data_raw, aes(x = date, y = InternetRetail)) + 
   geom_line() +
   theme_hc()
 
@@ -53,7 +53,7 @@ acf(ts_data, lag.max = 36)
 # 2.c) --------------------------------------------------------------------
 
 # Add simple moving average with window starting for t-6
-data$ma <- ma(ts_data, order = 12)
+data <- data_raw %>% mutate(ma = ma(ts_data, order = 12))
 
 # Plot the data accordingly
 ggplot(data, aes(x = date)) + 

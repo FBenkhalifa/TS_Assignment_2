@@ -294,13 +294,13 @@ as the spikes of the acf are only rarely significant.
 Check the model diagnostics.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-arima <- data$InternetRetail %>% auto.arima
+arima <- auto.arima(ts_data)
 summary(arima)
 
 ```
-An ARIMA(2,1,3) was applied to the data. An intercept is also included to account for the drift.
+A seasonal ARIMA (0,1,1)x(0,1,0) with period 12 has been chosen by the function. So for the non-seasonal part pf the model a (0,1,1) ARIMA has been selected and for the seasonal part a (0,1,0) applies.
 
-The model and the RMSE has low error measures suggesting a good fit to the data.
+The RMSE with 41. looks appealing.
 
 (i) Calculate h = 24 step ahead forecasts for the time series using the function "fore-
 cast" of the library "forecast". Does your forecast live up to your expectations?
@@ -323,8 +323,10 @@ preds %>%
   # Aesthetics
   theme_hc() +
   labs(title = "Sales, 2-Year Forecast", x = "date", y = "value") 
+#' Comment: 
 
 ```
 
-
+The forecast follows our expectations as it continues the seasonal
+#' pattern closely.
 
