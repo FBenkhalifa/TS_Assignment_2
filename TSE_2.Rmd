@@ -52,7 +52,6 @@ data %>% ggplot(aes(x = time, y = spread)) + geom_line(color = "blue", alpha = 0
 COntrary to the two series individually, the spread seems to be stationary. This is a furhter hint to costationarity of the two series.
 
 
-
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 acf(data$spread)
 ```
@@ -100,7 +99,7 @@ ca.jo(data %>% select(EWA, EWC))
 
 ## 2. Seasonalities and Forecasting
 
-(a) The tle "InternetRetailSales.xlsx" contains information on monthly average in-
+(a) The title "InternetRetailSales.xlsx" contains information on monthly average in-
 ternet retail sales in the UK from July 2011 to December 2019 by the British
 Offce for National Statistics. Load the file into R and turn the data into a time
 series object using the "tseries" library. Plot the data and comment.
@@ -111,9 +110,6 @@ data <- read_csv2("./data/InternetRetailSales.csv") %>%
   unite(col = "date", Year:Month, sep = " ", remove = FALSE) %>% 
   mutate_at("date", ~ymd(., truncated = 1))
 
-# Convert data to time series object
-ts_data <- ts(data$InternetRetail, frequency = 12, start = c(2011, 7))
-
 # Plot the data
 plot(ts_data)
 ggplot(data, aes(x = date, y = InternetRetail)) + 
@@ -121,9 +117,9 @@ ggplot(data, aes(x = date, y = InternetRetail)) +
   theme_hc()
 
 ```
-Comment: From the plot we can observe that the sales are trending upwards.
+From the plot we can observe that the sales are trending upwards.
 Additionally, we observe sales to be highly seasonal, with a sharp spike
-in the last quarter.
+in the last quarter and an increase in magnitude over time. 
 
 
 (b) Create a seasonal plot of the data (you can e.g. use the function "ggseasonplot",
@@ -131,28 +127,62 @@ choose the frequency appropriately) and plot the ACF of the time series for a
 number of h = 36 lags. Comment.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
+# Convert data to time series object
+ts_data <- ts(data$InternetRetail, frequency = 12, start = c(2011, 7))
+
 # Create seasonal plot
-ggseasonplot(ts_data) + theme_hc()
+ggseasonplot(ts_data,
+             season.labels = TRUE,
+             year.labels=TRUE,
+             year.labels.left=TRUE) + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Internet Retail Sales",
+       subtitle = "Monthly Average Internet Retail Sales in the UK (July 2011-Dec 2019)",
+       x = "Month",
+       y = "Internet Retail Sales")+
+  theme(legend.position = "none")+
+  guides(color=guide_legend(NULL))+
+  theme_hc()
 
 ```
-Comment: With this plot the time axis is fixed to one year and different
+With this plot the time axis is fixed to one year and different
 years are represented by different lines. We can thus better compare sales
 across years and more clearly see how sales spike in november and december, 
-due to christmas business.
+due to christmas business. Black friday sales could also be considered as source for the increase.
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+
+# Create acf plot
+acf(ts_data, lag.max = 36)
+
+```
+ The acf shows how much the sales of one month correlate with the nth lag of monthly sales, up to 36 months. We can see that the correlation is especially high between the holiday sale seasons, which are 12 months apart. The acf is significant up to a lag of 24, resembling a 2 year time 
+period.
 
 (c) Calculate the trend using a moving average with a window of twelve observations.
 Add it to your plot and comment shortly.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-# Create acf plot
-acf(ts_data, lag.max = 36)
+
+data$ma <- ma(ts_data, order = 12, centre = TRUE)
+
+# Plot the data accordingly
+ggplot(data, aes(x = date)) + 
+  geom_line(aes(y = InternetRetail)) +
+  geom_line(aes(y = simple_ma), color = "red") +
+  scale_x_date(date_breaks = "12 months",
+               date_labels = "%m/%y")+
+  labs(title = "Sales and MA(12) Trend",
+       subtitle = "Monthly Average Internet Retail Sales",
+       x = "Date",
+       y = "Sales")
+theme_hc()
 
 ```
-Comment: The acf shows how much the sales of one month correlate with the 
-nth lag of monthly sales, up to 36 months. We can see that the correlation
-is especially high between the holiday sale seasons, which are 12 months 
-apart. The acf is significant up to a lag of 24, resembling a 2 year time 
-period.
+The moving average slides a window of fixed size over the data and them computes the mean of them. It takes the following form 
+$$\hat{T}_t = \frac{1}{m} \sum^k_{j = -k}y_{t+j}$$ with $k = \frac{m-1}{2}$.
+The order 
+
 
 (d) Explain the difference between an additive and a multiplicative time series de-
 composition into seasonal, trend and residual component. Justify which decom-
@@ -161,19 +191,19 @@ position to choose for the data set.
 The type of the time series determines how the trend, seasonal and residual comp
 onent interact. If the time series is multiplicative, the components multiply
 together. An increasing trend then results in an increased amplitude of the
-seasonal activity.
-Formula
+seasonal activity. It takes the following form:
+$$y_t = m_ts_t  e_t$$
+where $m_t$ is the trend component, $s_t$ is the seasonal component and $e_t$ the residual component.
 The additive time series is defined by an additive nature of the individual comp
 onents. An increasing trend then does not corresponds to increasing peaks and troughs
 of the time series. It stays relatively stable and no change in amplitude can
 be observed.
-Formula
+$$y_t = m_t + s_t + e_t$$
 For this dataset a multiplicative decomposition should be chosen, since we clearly
 see an increase in the fluctuation with increasing trend. 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 # Add simple moving average with window starting for t-6
-data$simple_ma <- ts_data %>% slide_dbl(mean, .before = 6, .after = 6)
 data$ma <- ma(ts_data, order = 12, centre = TRUE)
 
 # Plot the data accordingly
@@ -183,7 +213,7 @@ ggplot(data, aes(x = date)) +
   theme_hc()
 
 ```
-Comment: The MA process is of order 12, and thus averages over one year.
+The MA process is of order 12, and thus averages over one year.
 We can clearly see the smooth upwards trend of sales. 
 
 (e) Detrend the time series according to your decomposition choice (either multiplica-
@@ -193,13 +223,23 @@ tive or additive). Would you deem the resulting series to be (weakly) stationary
 data <- data %>% mutate(detrend = InternetRetail/simple_ma)
 ggplot(data, aes(x = date)) + 
   geom_line(aes(y = detrend)) +
+    labs(title = "Trend Component",
+       x = "Time",
+       y = "Value")
   theme_hc()
 
 
 ```
-No the data is not weakly stationary since the graph is obviously a 
+No, the data is not weakly stationary since the graph is obviously a 
 function of time and seasonal patterns pertain. Both mean and variance of the
 time series are a function of time.
+
+```{r, include=TRUE, message = FALSE, warning = FALSE}
+
+seasonal_component <- data %>% group_by(Month) %>% summarize(Mean = mean(detrend))
+seasonal_component %>% ggplot(aes(x ))
+
+```
 
 (f) Decompose the time series using the "decompose" command and comment.
 
