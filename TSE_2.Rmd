@@ -307,8 +307,22 @@ cast" of the library "forecast". Does your forecast live up to your expectations
 
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-preds <- forecast(arima, h = 24)
-preds
+
+preds <- forecast(arima, h = 24) %>% sweep::sw_sweep(timekit_idx = TRUE, rename_index = "date")
+
+preds %>%
+  ggplot(aes(x = date, y = value, color = key)) +
+  # Prediction intervals
+  geom_ribbon(aes(ymin = lo.95, ymax = hi.95), 
+              fill = "#D5DBFF", color = NA, size = 0) +
+  geom_ribbon(aes(ymin = lo.80, ymax = hi.80, fill = key), 
+              fill = "#596DD5", color = NA, size = 0, alpha = 0.8) +
+  # Actual & Forecast
+  geom_line(size = 1) + 
+  geom_point(size = 2) +
+  # Aesthetics
+  theme_hc() +
+  labs(title = "Sales, 2-Year Forecast", x = "date", y = "value") 
 
 ```
 

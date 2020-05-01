@@ -58,7 +58,7 @@ data$ma <- ma(ts_data, order = 12)
 # Plot the data accordingly
 ggplot(data, aes(x = date)) + 
   geom_line(aes(y = InternetRetail)) +
-  geom_line(aes(y = simple_ma), color = "red") +
+  geom_line(aes(y = ma), color = "red") +
   theme_hc()
 
 #' Comment: The MA process is of order 12, and thus averages over one year.
@@ -130,7 +130,7 @@ dec_data$random %>% acf(na.action = na.pass)
 
 # 2.h) --------------------------------------------------------------------
 
-arima <- ts_data %>% auto.arima
+arima <- auto.arima(ts_data)
 summary(arima)
 dec_data$random %>% plot
 
@@ -145,11 +145,6 @@ ljung_test %>% print(n = 50)
 # 2.i) --------------------------------------------------------------------
 
 preds <- forecast(arima, h = 24) %>% sweep::sw_sweep(timekit_idx = TRUE, rename_index = "date")
-preds %>% print(n = 100)
-
-ggplot(data) +
-  geom_line(aes(x = date, y = InternetRetail))+
-  geom_line()
 
 preds %>%
   ggplot(aes(x = date, y = value, color = key)) +
