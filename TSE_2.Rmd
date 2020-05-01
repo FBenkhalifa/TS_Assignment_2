@@ -306,7 +306,7 @@ Check the model diagnostics.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 arima <- auto.arima(ts_data)
-summary(arima) %>% pander
+summary(arima)
 
 ```
 A seasonal ARIMA (0,1,1)x(0,1,0) with period 12 has been chosen by the function. So for the non-seasonal part pf the model a (0,1,1) ARIMA has been selected and for the seasonal part a (0,1,0) applies.
