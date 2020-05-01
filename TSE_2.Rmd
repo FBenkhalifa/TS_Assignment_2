@@ -230,16 +230,31 @@ ggplot(data, aes(x = date)) +
 
 
 ```
-No, the data is not weakly stationary since the graph is obviously a 
+No, the detrended data is not weakly stationary since the graph is obviously a 
 function of time and seasonal patterns pertain. Both mean and variance of the
-time series are a function of time.
+time series are a function of time. 
+
+
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
 
-seasonal_component <- data %>% group_by(Month) %>% summarize(Mean = mean(detrend))
-seasonal_component %>% ggplot(aes(x ))
+seasonal_component <- data %>% 
+  group_by(Month) %>% 
+  summarize(s_t = mean(m_t)) %>% 
+  mutate(Month = month(mdy(Month, truncated = 2), label = T, locale = "eng")) %>% 
+  arrange(Month)
+
+# Plot residual
+data <- data %>% right_join(., seasonal_component, by = "Month") %>% 
+  mutate(u_t = InternetRetail / (ma * s_t))
+
+data %>% ggplot(aes(x=date, y = u_t)) + 
+  geom_line() + 
+  theme_hc()
 
 ```
+The seasonal component can also be considered as stationary process, since it 
+Clearly, the error term is white noise, hence the process can be seen as weakly stationary.
 
 (f) Decompose the time series using the "decompose" command and comment.
 
@@ -250,7 +265,7 @@ plot(dec_data)
 
 ```
 
-Comment: The process is decomposed into the trend, seasonal and random component.
+The process is again decomposed into the trend, seasonal and random component.
 The trend is smooth and continuously rising. The random seems to be 
 a stationary process with constant mean and variance. The seasonal component..(stationary?)
 
@@ -263,7 +278,7 @@ dec_data$random %>% acf(na.action = na.pass)
 
 ```
 
-Comment: The residual component of the decomposition, seem to be white noise
+The residual component of the decomposition, seem to be white noise
 as the spikes of the acf are only rarely significant.
 
 
@@ -271,13 +286,13 @@ as the spikes of the acf are only rarely significant.
 Check the model diagnostics.
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE}
-arima <- dec_data$random %>% auto.arima
+arima <- data$InternetRetail %>% auto.arima
 summary(arima)
-dec_data$random %>% plot
 
 ```
-Check model diagnostics: The model has low error measures suggesting a 
-good fit to the data.
+An ARIMA(2,1,3) was applied to the data. An intercept is also included to account for the drift.
+
+The model and the RMSE has low error measures suggesting a good fit to the data.
 
 (i) Calculate h = 24 step ahead forecasts for the time series using the function "fore-
 cast" of the library "forecast". Does your forecast live up to your expectations?
