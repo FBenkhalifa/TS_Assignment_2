@@ -157,7 +157,7 @@ seasonal_component <- data %>%
 
 
 # Plot seasonal component
-ts(rep(seasonal_component$Mean, 12),  frequency = 12, start = c(2011, 1)) %>% 
+ts(rep(seasonal_component$s_t, 12),  frequency = 12, start = c(2012, 1)) %>% 
   plot()
 
 # Plot residual
@@ -188,17 +188,10 @@ dec_data$random %>% acf(na.action = na.pass)
 
 arima <- auto.arima(ts_data)
 arima_ord <- auto.arima(data$InternetRetail)
-arima %>% summary
-arima %>% sw_tidy
-arima %>% sw_glance
 map_dfr(list(arima, arima_ord), sw_glance) %>% pander
 
 #' Check model diagnostics: The model has low error measures suggesting a 
 #' good fit to the data.
-
-
-ljung_test <- map_df(c(1:24), ~Box.test(dec_data$random, lag = ., type = "Box-Pierce") %>% tidy)
-ljung_test %>% print(n = 50)
 
 
 # 2.i) --------------------------------------------------------------------
