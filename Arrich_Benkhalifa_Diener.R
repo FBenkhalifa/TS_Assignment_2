@@ -5,6 +5,7 @@ library(forecast)
 library(slider)
 library(ggthemes)
 library(broom)
+library(sweep)
 
 
 
@@ -129,7 +130,7 @@ dec_data$random %>% acf(na.action = na.pass)
 
 # 2.h) --------------------------------------------------------------------
 
-arima <- dec_data$random %>% auto.arima
+arima <- ts_data %>% auto.arima
 summary(arima)
 dec_data$random %>% plot
 
@@ -143,10 +144,26 @@ ljung_test %>% print(n = 50)
 
 # 2.i) --------------------------------------------------------------------
 
-preds <- forecast(arima, h = 24)
-preds
+preds <- forecast(arima, h = 24) %>% sweep::sw_sweep(timekit_idx = TRUE, rename_index = "date")
+preds %>% print(n = 100)
 
+ggplot(data) +
+  geom_line(aes(x = date, y = InternetRetail))+
+  geom_line()
 
+preds %>%
+  ggplot(aes(x = date, y = value, color = key)) +
+  # Prediction intervals
+  geom_ribbon(aes(ymin = lo.95, ymax = hi.95), 
+              fill = "#D5DBFF", color = NA, size = 0) +
+  geom_ribbon(aes(ymin = lo.80, ymax = hi.80, fill = key), 
+              fill = "#596DD5", color = NA, size = 0, alpha = 0.8) +
+  # Actual & Forecast
+  geom_line(size = 1) + 
+  geom_point(size = 2) +
+  # Aesthetics
+  theme_hc() +
+  labs(title = "Sales, 2-Year Forecast", x = "date", y = "value") 
 #' Comment: The forecast follows our expectations as it continues the seasonal
 #' pattern closely.
 
