@@ -132,17 +132,10 @@ dec_data$random %>% acf(na.action = na.pass)
 
 arima <- auto.arima(ts_data)
 arima_ord <- auto.arima(data$InternetRetail)
-arima %>% summary
-arima %>% sw_tidy
-arima %>% sw_glance
 map_dfr(list(arima, arima_ord), sw_glance) %>% pander
 
 #' Check model diagnostics: The model has low error measures suggesting a 
 #' good fit to the data.
-
-
-ljung_test <- map_df(c(1:24), ~Box.test(dec_data$random, lag = ., type = "Box-Pierce") %>% tidy)
-ljung_test %>% print(n = 50)
 
 
 # 2.i) --------------------------------------------------------------------

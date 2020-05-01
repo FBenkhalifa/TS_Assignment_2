@@ -108,11 +108,13 @@ ca.jo(data %>% select(EWA, EWC))
 ```
 
 Econometric Relationship: Both time series have an order of integration of one, or I(1), meaning that the minimum number of differences that are required to obtain a covariance-stationary series are equal to 1.
+As the two series move in a similar way, we might suspect that there is a linear combination of these series with integrated of order less than 1, or I, which would mean that the two series are co-integrated.
 
+The Johansen test allows to test if cointegration is present in a set of k time series. There are two approaches to the Johansen’s test. The trace and the the maximum eigenvalue approach. Compared to Engle-Granger 2-step approach to estimating cointegration relations, the Johansen test is more powerful as it allows to test for than one cointegration relationship.
 
-The Johansen test allows to test of multiple I(1) time series.
+Trace: The null hypothesis is that the number of cointegration vectors is r = r* < k, and the alternative hypothesis that r = k. Where testing is done sequentially for r* = 1,2,3,.. and the first value of r that is not rejected is taken as the estimate of r.
 
-
+Maximum Eigenvalue: The is identical to the trace test but the alternative is r = r* + 1. Likewise, with sequential testing with r* = 1,2,... the first value of r that is not rejected is taken as the estimate of r.
 
 
 ## 2. Seasonalities and Forecasting
