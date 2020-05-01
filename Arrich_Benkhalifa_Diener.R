@@ -6,7 +6,7 @@ library(slider)
 library(ggthemes)
 library(broom)
 library(sweep)
-
+library(pander)
 
 
 # 2.a) --------------------------------------------------------------------
@@ -131,8 +131,11 @@ dec_data$random %>% acf(na.action = na.pass)
 # 2.h) --------------------------------------------------------------------
 
 arima <- auto.arima(ts_data)
-summary(arima)
-dec_data$random %>% plot
+arima_ord <- auto.arima(data$InternetRetail)
+arima %>% summary
+arima %>% sw_tidy
+arima %>% sw_glance
+map_dfr(list(arima, arima_ord), sw_glance) %>% pander
 
 #' Check model diagnostics: The model has low error measures suggesting a 
 #' good fit to the data.
