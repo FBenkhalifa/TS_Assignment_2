@@ -7,6 +7,62 @@ library(ggthemes)
 library(broom)
 library(sweep)
 library(pander)
+library(quantmod)
+library(urca)
+library(broom)
+library(urca)
+library(broom)
+
+---
+  title: "TSE Assignment 2"
+author: "Maximilian J. Arrich"
+date: "29 4 2020"
+output: pdf_document
+---
+
+
+# 1.a) --------------------------------------------------------------------
+
+setwd(here::here())
+# Load the data from quantmod
+getSymbols("EWA",src="yahoo")
+getSymbols("EWC",src="yahoo")
+
+# clean up
+ewa <- EWA %>% .[,6] %>% window(start = "2012-02-02", end = "2020-02-02") %>% 
+  set_colnames("EWA") %>% as_tibble(rownames = "time")
+ewc <- EWC %>% .[,6] %>% window(start = "2012-02-02", end = "2020-02-02")  %>% 
+  set_colnames("EWC")%>% as_tibble(rownames = "time")
+data <- full_join(ewa, ewc, by = "time") %>% mutate(time = as.Date(time))
+
+# reshape and plot
+data %>% pivot_longer(-time, "Series") %>% 
+  ggplot(aes(x = time, y = value, color = Series)) + geom_line() + 
+  ylab("Adj. Closing Price") + xlab("Time")
+
+
+# 1.b) --------------------------------------------------------------------
+
+data <- data %>% mutate(spread = EWA - EWC) 
+data %>% ggplot(aes(x = time, y = spread)) + geom_line(color = "blue", alpha = 0.6) +
+  ylab("Adj. Closing Price") + xlab("Time") + ggtitle("Spread")
+acf(data$spread)
+pacf(data$spread)
+
+# 1.c) --------------------------------------------------------------------
+
+
+
+adf_res <- data %>% select(-time) %>% 
+  imap(~ur.df(.x, lag = 5, type = "none", selectlags = "AIC")@testreg %>% tidy() %>% filter(!grepl("diff", term)) %>% mutate(series = .y)) %>%
+  do.call(what = bind_rows) %>% select(series, statistic, p.value)
+
+pander(adf_res)
+
+
+# 1.d) --------------------------------------------------------------------
+
+ca.jo(data %>% select(EWA, EWC))
 
 
 # 2.a) --------------------------------------------------------------------
